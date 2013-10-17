@@ -29,20 +29,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-<apex:page controller="UserAccessDetailsController" setup="true">
-  <apex:stylesheet value="{!URLFOR($Resource.jQuery, 'css/smoothness/jquery-ui-1.8.16.custom.css')}"/>
-  <apex:stylesheet value="{!URLFOR($Resource.css)}"/>
+<apex:page controller="UserAccessDetailsController" setup="true" sidebar="false">
+  <apex:stylesheet value="{!URLFOR($Resource.UserAccessJQuery, 'css/smoothness/jquery-ui-1.8.16.custom.css')}"/>
+  <apex:stylesheet value="{!URLFOR($Resource.UserAccessCSS)}"/>
   
-  <apex:includeScript value="{!URLFOR($Resource.jQuery, 'js/jquery-1.6.2.min.js')}"/>
-  <apex:includeScript value="{!URLFOR($Resource.jQuery, 'js/jquery-ui-1.8.16.custom.min.js')}"/>
-  <apex:includeScript value="{!URLFOR($Resource.js)}"/>
+  <apex:includeScript value="{!URLFOR($Resource.UserAccessJQuery, 'js/jquery-1.6.2.min.js')}"/>
+  <apex:includeScript value="{!URLFOR($Resource.UserAccessJQuery, 'js/jquery-ui-1.8.16.custom.min.js')}"/>
+  <apex:includeScript value="{!URLFOR($Resource.UserAccessJS)}"/>
   
+  <apex:messages/>
+
   <apex:form >
-    <apex:outputPanel layout="none">
+    <apex:outputPanel layout="none" rendered="{!ISNULL($CurrentPage.parameters.uid)}">
+      <apex:pageBlock title="Error Processing Request">
+        No user id specified
+      </apex:pageBlock>
+    </apex:outputPanel>
+    <apex:outputPanel layout="none" rendered="{!NOT(ISNULL($CurrentPage.parameters.uid))}">
       <apex:sectionHeader title="User Access Details" subtitle="{!userFullName}"/>
 
       <apex:pageBlock title="User Permissions">
-        <c:PermsetAccessTable tableClass="userPermTable" 
+        <c:UserAccessPermsetAccessTable tableClass="userPermTable" 
                               rows="{!permsetInfo}" 
                               headings="{!userPermLabels}" 
                               enabledCols="{!userPermStatus}">
@@ -50,7 +57,7 @@
             <apex:image value="/img/checkbox_checked.gif" alt="Checked" styleClass="checkImg" 
                         title="Checked" rendered="{!userPerms[row.Id][heading.apiName]}"/>
           </div>
-        </c:PermsetAccessTable>
+        </c:UserAccessPermsetAccessTable>
       </apex:pageBlock>
 
       <apex:pageBlock title="Object Information">
@@ -65,7 +72,7 @@
           <span class="permissionsmodifyallrecords_true">Modify All Records</span>
         </apex:pageBlockButtons>
       
-        <c:PermsetAccessTable tableClass="objectPermTable" columnClass="objectColumn"
+        <c:UserAccessPermsetAccessTable tableClass="objectPermTable" columnClass="objectColumn"
                               rows="{!permsetInfo}"
                               headings="{!objectLabels}"
                               enabledCols="{!objectPermStatus}">
@@ -80,7 +87,7 @@
               </apex:repeat>
             </tr>
           </table>
-        </c:PermsetAccessTable>
+        </c:UserAccessPermsetAccessTable>
 
         <!-- Defines a JavaScript function we can call to reload the FLS table -->
         <apex:actionFunction action="{!loadFls}" name="loadFls" rerender="flsTable" 
@@ -97,7 +104,7 @@
           
           <apex:outputPanel id="flsTable" layout="block" styleClass="flsTableContainer">
             <div class="flsTableContainerHeading">Field Level Security: {!flsObjectType}</div>
-            <c:PermsetAccessTable tableClass="flsTable" columnClass="flsColumn"
+            <c:UserAccessPermsetAccessTable tableClass="flsTable" columnClass="flsColumn"
                                   rows="{!permsetInfo}" 
                                   headings="{!fieldLabels}"
                                   enabledCols="{!fieldStatus}">
@@ -110,29 +117,29 @@
                   </apex:repeat>
                 </tr>
               </table>
-            </c:PermsetAccessTable>
+            </c:UserAccessPermsetAccessTable>
           </apex:outputPanel>
         </apex:outputPanel>
       </apex:pageBlock>
       
       <apex:pageBlock title="Apex Classes">
-        <c:PermsetAccessTable tableClass="apexClassTable" rows="{!permsetInfo}" headings="{!classNames}"
+        <c:UserAccessPermsetAccessTable tableClass="apexClassTable" rows="{!permsetInfo}" headings="{!classNames}"
                               enabledCols="{!classStatus}">
           <div style="width: 21px">
             <apex:image value="/img/checkbox_checked.gif" alt="Checked" styleClass="checkImg" 
                         title="Checked" rendered="{!apexClasses[row.Id][heading.apiName]}"/>
           </div>
-        </c:PermsetAccessTable>
+        </c:UserAccessPermsetAccessTable>
       </apex:pageBlock>
       
       <apex:pageBlock title="Visual Force Pages">
-        <c:PermsetAccessTable tableClass="vfPageTable" rows="{!permsetInfo}" headings="{!pageNames}"
+        <c:UserAccessPermsetAccessTable tableClass="vfPageTable" rows="{!permsetInfo}" headings="{!pageNames}"
                               enabledCols="{!pageStatus}">
           <div style="width: 21px">
             <apex:image value="/img/checkbox_checked.gif" alt="Checked" styleClass="checkImg" 
                         title="Checked" rendered="{!pages[row.Id][heading.apiName]}"/>
           </div>
-        </c:PermsetAccessTable>
+        </c:UserAccessPermsetAccessTable>
       </apex:pageBlock>
     </apex:outputPanel>
   </apex:form>

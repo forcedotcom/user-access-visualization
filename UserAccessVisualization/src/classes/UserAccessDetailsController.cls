@@ -54,30 +54,30 @@ public class UserAccessDetailsController {
 
     // Likewise, the list of permsets for which we're displaying information is pretty
     // important for every request, so we should hold on to that in viewstate.
-    public List<NameLabel> permsetInfo { get; private set; }
+    public List<UserAccessNameLabel> permsetInfo { get; private set; }
     
-    // A note about the various MapHolder variables.  These are Maps for permission set id
+    // A note about the various UserAccessMapHolder variables.  These are Maps for permission set id
     // to access settings construct.  Each of these maps will have one entry with a null
     // key which represents the users total access.
     
     // User perm info is only used for the initial request, so don't hold on to it.  The
     // comments on the following lines identify the patterns used for variables declared
     // in subsequent blocks.
-    private transient List<NameLabel> xUserPermLabels;  // API Names and Labels, and IDs
-    private transient MapHolder xUserPermStatus;        // Which perms are enabled for this user
+    private transient List<UserAccessNameLabel> xUserPermLabels;  // API Names and Labels, and IDs
+    private transient UserAccessMapHolder xUserPermStatus;        // Which perms are enabled for this user
     private transient Map<Id,PermissionSet> xUserPerms; // Map from permset Id to PermissionSet Object, 
                                                         // which has the userperm settings 
 
     // Likewise, object perm info is only used for the initial request, so don't hold on to it
-    private transient List<NameLabel> xObjectLabels;
-    private transient MapHolder xObjectStatus;
+    private transient List<UserAccessNameLabel> xObjectLabels;
+    private transient UserAccessMapHolder xObjectStatus;
     // Map from permset id -> object name -> ObjectPermissions object.
     private transient Map<Id,Map<String,ObjectPermissions>> xObjectPerms;
 
     // FLS info used for rendering is only used a single time per request and not needed
     // from request to request, so we don't need to hold on to it.    
-    private transient List<NameLabel> xFieldLabels;
-    private transient MapHolder xFieldStatus;
+    private transient List<UserAccessNameLabel> xFieldLabels;
+    private transient UserAccessMapHolder xFieldStatus;
     // Map from permset id -> field name -> FieldPermissions object.  This is the set of
     // FLS data relevant for the object defined by flsObjectType (see below)
     private transient Map<Id,Map<String,FieldPermissions>> xFls;
@@ -89,7 +89,7 @@ public class UserAccessDetailsController {
         get {
             if (null != userId && null == flsObjectType) {
             	// Default flsObjectType to the first "visible" object.
-                for (NameLabel nl : getObjectLabels()) {
+                for (UserAccessNameLabel nl : getObjectLabels()) {
                     if (getObjectPermStatus().it.get(nl.apiName)) {
                         flsObjectType = nl.apiName;
                         break;
@@ -112,11 +112,11 @@ public class UserAccessDetailsController {
     }
     
     // ApexClass info is only used during the initial request.  Don't need to hold on to it.
-    private transient List<NameLabel> xClassNames;
+    private transient List<UserAccessNameLabel> xClassNames;
     private transient Map<Id,Map<String,Boolean>> xApexClasses;
 
     // Likewise, we don't need to hold onto VisualForce page information.
-    private transient List<NameLabel> xPageNames;
+    private transient List<UserAccessNameLabel> xPageNames;
     private transient Map<Id,Map<String,Boolean>> xPages;
     
     public UserAccessDetailsController() {
@@ -140,22 +140,22 @@ public class UserAccessDetailsController {
             userId = userData.Id;
             userFullName = userData.Name;
             
-            NameLabel totalAccess = new NameLabel('1TOTAL_ACCESS', 'TOTAL ACCESS');
-            NameLabel profilePermsetInfo;
-            List<NameLabel> nls = new List<NameLabel>();
+            UserAccessNameLabel totalAccess = new UserAccessNameLabel('1TOTAL_ACCESS', 'TOTAL ACCESS');
+            UserAccessNameLabel profilePermsetInfo;
+            List<UserAccessNameLabel> nls = new List<UserAccessNameLabel>();
             for (PermissionSetAssignment psa : userData.PermissionSetAssignments) {
                 if (psa.PermissionSet.isOwnedByProfile) {
-                    profilePermsetInfo = new NameLabel(
+                    profilePermsetInfo = new UserAccessNameLabel(
                         psa.PermissionSet.Id, psa.PermissionSet.Name, psa.PermissionSet.Profile.Name
                     );
                 } else {
-                    nls.add(new NameLabel(
+                    nls.add(new UserAccessNameLabel(
                         psa.PermissionSet.Id, psa.PermissionSet.Name, psa.PermissionSet.Label
                     ));
                 }
             }
 
-            permsetInfo = new List<NameLabel>();
+            permsetInfo = new List<UserAccessNameLabel>();
             permsetInfo.add(totalAccess);
             permsetInfo.add(profilePermsetInfo);
             if (!nls.isEmpty()) {
@@ -171,14 +171,14 @@ public class UserAccessDetailsController {
      * Use Apex describe information to determine the set of User Permissions available within
      * this organization.
      */
-    public List<NameLabel> getUserPermLabels() {
+    public List<UserAccessNameLabel> getUserPermLabels() {
         if (null == xUserPermLabels) {
-            List<NameLabel> result = new List<NameLabel>();
+            List<UserAccessNameLabel> result = new List<UserAccessNameLabel>();
             Map<String, Schema.SObjectField> fMap = Schema.SObjectType.PermissionSet.fields.getMap();
             for (String fName : fMap.keySet()) {
                 if (fName.startsWith(PERMISSIONS)) {
                     String label = fMap.get(fName).getDescribe().getLabel();
-                    result.add(new NameLabel(fName, label));
+                    result.add(new UserAccessNameLabel(fName, label));
                 }
             }
             result.sort();
@@ -201,7 +201,7 @@ public class UserAccessDetailsController {
             for (SObject sobj : queryUserPerms(extractPsIds(permsetInfo))) {
                 PermissionSet ps = (PermissionSet) sobj;
                 result.put(ps.Id, ps);
-                for (NameLabel nl : getUserPermLabels()) {
+                for (UserAccessNameLabel nl : getUserPermLabels()) {
                 	// Total access computation
                     totalAccess.put(nl.apiName, 
                        getWithDefault(totalAccess, nl.apiName, false) 
@@ -230,24 +230,24 @@ public class UserAccessDetailsController {
      * Basically provides an alternate representation of total access to make our
      * grid display consistent between access settings.
      */
-    public MapHolder getUserPermStatus() {
+    public UserAccessMapHolder getUserPermStatus() {
         if (null == xUserPermStatus) {
             PermissionSet totalAccess = getUserPerms().get(null);
             Map<String,Boolean> msb = new Map<String,Boolean>();
-            for (NameLabel nl : getUserPermLabels()) {
+            for (UserAccessNameLabel nl : getUserPermLabels()) {
                 msb.put(nl.apiName, (Boolean) totalAccess.get(nl.apiName));
             }
-            xUserPermStatus = new MapHolder(msb);
+            xUserPermStatus = new UserAccessMapHolder(msb);
         }
         return xUserPermStatus;
     }
     
     /**
-     * Transforms a list of NameLabel objects into just a List of Id objects
+     * Transforms a list of UserAccessNameLabel objects into just a List of Id objects
      */
-    private List<Id> extractPsIds(List<NameLabel> psInfo) {
+    private List<Id> extractPsIds(List<UserAccessNameLabel> psInfo) {
         List<Id> result = new List<Id>();
-        for (NameLabel nl : psInfo) {
+        for (UserAccessNameLabel nl : psInfo) {
             if (null != nl.Id) result.add(nl.Id);
         }
         return result;
@@ -260,7 +260,7 @@ public class UserAccessDetailsController {
      */
     private List<SObject> queryUserPerms(List<Id> psIds) {
         String soql = 'SELECT Id';
-        for (NameLabel nl : getUserPermLabels()) {
+        for (UserAccessNameLabel nl : getUserPermLabels()) {
             soql += ', ' + nl.apiName;
         }
         soql += ' FROM PermissionSet WHERE Id IN :psIds';
@@ -271,9 +271,9 @@ public class UserAccessDetailsController {
      * Computes the API Name and Label information for the set of business objects available
      * to the organization
      */
-    public List<NameLabel> getObjectLabels() {
+    public List<UserAccessNameLabel> getObjectLabels() {
         if (null == xObjectLabels) {
-            List<NameLabel> result = new List<NameLabel>();
+            List<UserAccessNameLabel> result = new List<UserAccessNameLabel>();
             Map<String,SObjectType> describe = Schema.getGlobalDescribe();
 
             // We can't really depend on describe to give us the object we want
@@ -286,7 +286,7 @@ public class UserAccessDetailsController {
             // for now.                   
             for (ObjectPermissions op : [SELECT SObjectType FROM ObjectPermissions 
                                           WHERE Parent.Profile.Name = 'System Administrator']) {
-                result.add(new NameLabel(op.SObjectType, 
+                result.add(new UserAccessNameLabel(op.SObjectType, 
                                          describe.get(op.SObjectType).getDescribe().getLabel()));
             }
             result.sort();
@@ -305,15 +305,15 @@ public class UserAccessDetailsController {
     /**
      * 
      */
-    public MapHolder getObjectPermStatus() {
+    public UserAccessMapHolder getObjectPermStatus() {
         if (null == xObjectStatus) {
             Map<String,Boolean> msb = new Map<String, Boolean>();
-            for (NameLabel nl : getObjectLabels()) {
-                // Converts total access into our MapHolder data structure.
+            for (UserAccessNameLabel nl : getObjectLabels()) {
+                // Converts total access into our UserAccessMapHolder data structure.
                 msb.put(nl.apiName,
                         getWithDefault(getObjectPerms().get(null).get(nl.apiName), READ, false)); 
             }
-            xObjectStatus = new MapHolder(msb);
+            xObjectStatus = new UserAccessMapHolder(msb);
         }
         return xObjectStatus;
     }
@@ -327,9 +327,9 @@ public class UserAccessDetailsController {
             Map<Id,Map<String,ObjectPermissions>> result = new Map<Id,Map<String,ObjectPermissions>>();
 
             // Ensure that each permset and object has an entry in our map structure
-            for (NameLabel ps : permsetInfo) {
+            for (UserAccessNameLabel ps : permsetInfo) {
             	result.put(ps.Id, new Map<String,ObjectPermissions>());
-                for (NameLabel op : getObjectLabels()) {
+                for (UserAccessNameLabel op : getObjectLabels()) {
                 	result.get(ps.Id).put(op.apiName, new ObjectPermissions());
                 }
             }
@@ -338,7 +338,7 @@ public class UserAccessDetailsController {
             // an ObjectPermissions entry for every object.
             Map<String,ObjectPermissions> totalAccess = new Map<String,ObjectPermissions>();
             result.put(null, totalAccess);
-            for (NameLabel op : getObjectLabels()) {
+            for (UserAccessNameLabel op : getObjectLabels()) {
             	totalAccess.put(op.apiName, new ObjectPermissions());
             }
             
@@ -376,13 +376,13 @@ public class UserAccessDetailsController {
      * shouldn't be much of an issue here since a user won't have FieldPermissions assigned
      * for fields they do not have access to
      */
-    public List<NameLabel> getFieldLabels() {
+    public List<UserAccessNameLabel> getFieldLabels() {
         if (null == flsObjectType) return null; 
         if (null == xFieldLabels) {
-            List<NameLabel> result = new List<NameLabel>();
+            List<UserAccessNameLabel> result = new List<UserAccessNameLabel>();
             Map<String, Schema.SObjectField> fmap = Schema.getGlobalDescribe().get(flsObjectType).getDescribe().fields.getMap();
             for (String key : fmap.keySet()) {
-                result.add(new NameLabel(key, fmap.get(key).getDescribe().getLabel()));
+                result.add(new UserAccessNameLabel(key, fmap.get(key).getDescribe().getLabel()));
             }
             result.sort();
             xFieldLabels = result;
@@ -405,7 +405,7 @@ public class UserAccessDetailsController {
             Map<Id,Map<String,FieldPermissions>> result = new Map<Id,Map<String,FieldPermissions>>();
             Set<Id> psIds = new Set<Id>();
 
-            for (NameLabel ps : permsetInfo) {
+            for (UserAccessNameLabel ps : permsetInfo) {
                 result.put(ps.Id, new Map<String,FieldPermissions>());
                 psIds.add(ps.Id);
             }
@@ -448,18 +448,18 @@ public class UserAccessDetailsController {
         return xFls;
     }
 
-    public MapHolder getFieldStatus() {
+    public UserAccessMapHolder getFieldStatus() {
         if (null == xFieldStatus) {
             Map<String,Boolean> msb = new Map<String,Boolean>();
-            for (NameLabel nl : getFieldLabels()) {
-                for (NameLabel ps : permsetInfo) {
+            for (UserAccessNameLabel nl : getFieldLabels()) {
+                for (UserAccessNameLabel ps : permsetInfo) {
                     if (!getFls().get(ps.Id).containsKey(nl.apiName)) {
                         getFls().get(ps.Id).put(nl.apiName, new FieldPermissions());
                     }
                 }
                 msb.put(nl.apiName, getFls().get(null).get(nl.apiName).PermissionsRead);
             }
-            xFieldStatus = new MapHolder(msb);
+            xFieldStatus = new UserAccessMapHolder(msb);
         }
         return xFieldStatus;
     }
@@ -467,11 +467,11 @@ public class UserAccessDetailsController {
     /**
      * Computes the list of classes available in the org
      */
-    public List<NameLabel> getClassNames() {
+    public List<UserAccessNameLabel> getClassNames() {
         if (null == xClassNames) {
-            List<NameLabel> result = new List<NameLabel>();
+            List<UserAccessNameLabel> result = new List<UserAccessNameLabel>();
             for (ApexClass ac : [SELECT Id, Name FROM ApexClass]) {
-                result.add(new NameLabel(ac.Id, ac.Name, ac.Name));
+                result.add(new UserAccessNameLabel(ac.Id, ac.Name, ac.Name));
             }
             result.sort();
             xClassNames = result;
@@ -489,18 +489,18 @@ public class UserAccessDetailsController {
         return xApexClasses;
     }
     
-    public MapHolder getClassStatus() {
-        return new MapHolder(getApexClasses().get(null));
+    public UserAccessMapHolder getClassStatus() {
+        return new UserAccessMapHolder(getApexClasses().get(null));
     }
     
     /**
      * Computes which Visual Force pages are present in the org
      */
-    public List<NameLabel> getPageNames() {
+    public List<UserAccessNameLabel> getPageNames() {
         if (null == xPageNames) {
-            List<NameLabel> result = new List<NameLabel>();
+            List<UserAccessNameLabel> result = new List<UserAccessNameLabel>();
             for (ApexPage ap : [SELECT Id, Name FROM ApexPage]) {
-                result.add(new NameLabel(ap.Id, ap.Name, ap.Name));
+                result.add(new UserAccessNameLabel(ap.Id, ap.Name, ap.Name));
             }
             result.sort();
             xPageNames = result;
@@ -515,8 +515,8 @@ public class UserAccessDetailsController {
         return xPages;
     }
     
-    public MapHolder getPageStatus() {
-        return new MapHolder(getPages().get(null));
+    public UserAccessMapHolder getPageStatus() {
+        return new UserAccessMapHolder(getPages().get(null));
     }
 
     /**
@@ -524,7 +524,7 @@ public class UserAccessDetailsController {
      * they can easily be processed using common logic with some variables used to account for
      * differences
      */    
-    private Map<Id,Map<String,Boolean>> calculateSetupEntityAccess(String seaType, List<NameLabel> seaNames) {
+    private Map<Id,Map<String,Boolean>> calculateSetupEntityAccess(String seaType, List<UserAccessNameLabel> seaNames) {
         Map<Id,Map<String,Boolean>> result = new Map<Id,Map<String,Boolean>>();
         Map<Id,String> seaMap = new Map<Id,String>();
 
@@ -547,14 +547,14 @@ public class UserAccessDetailsController {
 
         // Ensure that each permset and setup entity has a row in our result datastructure.  This
         // keeps VisualForce happy when it does Map processing. 
-        for (NameLabel ps : permsetInfo) {
+        for (UserAccessNameLabel ps : permsetInfo) {
         	if (null != ps.Id) {
                 Map<String,Boolean> seaStatus = result.get(ps.Id);
                 if (null == seaStatus) {
                     seaStatus = new Map<String,Boolean>();
                     result.put(ps.Id, seaStatus);
                 }
-                for (NameLabel nl : seaNames) {
+                for (UserAccessNameLabel nl : seaNames) {
                 	boolean hasSea = enabledByPermset.containsKey(ps.Id) && enabledByPermset.get(ps.Id).contains(nl.id);
                     seaStatus.put(nl.apiName, hasSea);
                     if (hasSea || !total.containsKey(nl.apiName)) total.put(nl.apiName, hasSea);

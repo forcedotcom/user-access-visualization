@@ -29,10 +29,23 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-public class MapHolder {
-    public Map<String, Boolean> it { get; private set; }
+global class UserAccessNameLabel implements Comparable {
+	public Id id { get; private set; }
+    public String apiName { get; private set; }
+    public String label { get; private set; }
+
+    public UserAccessNameLabel(String apiName, String label) {
+    	this(null, apiName, label);
+    }
     
-    public MapHolder(Map<String, Boolean> it) {
-    	this.it = it;
+    public UserAccessNameLabel(Id id, String apiName, String label) {
+    	this.id = id;
+    	this.apiName = apiName;
+    	this.label = label;
+    }
+    
+    global Integer compareTo(Object obj) {
+    	UserAccessNameLabel other = (UserAccessNameLabel) obj;
+    	return label.compareTo(other.label);
     }
 }

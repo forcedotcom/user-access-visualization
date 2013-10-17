@@ -1,4 +1,4 @@
-<!--
+/**
  * Copyright (c) 2012, Salesforce.com, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -28,29 +28,11 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
--->
-<apex:component >
-  <apex:attribute name="rows" type="NameLabel[]" required="true" description="Permission sets to display"/>
-  <apex:attribute name="headings" type="NameLabel[]" required="true" description="Column headings"/>
-  <apex:attribute name="enabledCols" type="MapHolder" description="A map encapsulating whether column should be displayed"/>
-  <apex:attribute name="tableClass" type="String" description="CSS class for table"/>
-  <apex:attribute name="columnClass" type="String" description="CSS class for each column"/>
-  
-  <apex:dataTable value="{!rows}" var="row" cellspacing="0" cellpadding="0" styleClass="permsetAccessTable {!tableClass}">
-    <apex:column styleClass="nowrap psLabel">
-      <apex:facet name="header">&nbsp;</apex:facet>
-      <apex:outputText value="{!row.Label}"/>
-    </apex:column>
-    <apex:repeat var="heading" value="{!headings}">
-      <apex:column styleClass="{!columnClass} colName_{!heading.apiName} {!IF(AND(NOT(ISNULL(enabledCols)), enabledCols.it[heading.apiName]), 'colEnabled', 'colDisabled')}" 
-                   headerClass="{!columnClass} colName_{!heading.apiName} {!IF(AND(NOT(ISNULL(enabledCols)), enabledCols.it[heading.apiName]), 'colEnabled', 'colDisabled')}">
-        <apex:facet name="header">
-          <div class="headingContainer">
-            <div class="headingLabel">{!heading.label}</div>
-          </div>
-        </apex:facet>
-        <apex:componentBody />
-      </apex:column>
-    </apex:repeat>
-  </apex:dataTable>
-</apex:component>
+ */
+public class UserAccessMapHolder {
+    public Map<String, Boolean> it { get; private set; }
+    
+    public UserAccessMapHolder(Map<String, Boolean> it) {
+    	this.it = it;
+    }
+}

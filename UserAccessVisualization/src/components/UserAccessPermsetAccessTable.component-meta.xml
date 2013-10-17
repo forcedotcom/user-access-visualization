@@ -2,5 +2,5 @@
 <ApexComponent xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>25.0</apiVersion>
     <description>This is a generic template for Visualforce Component.  With this template, you may adjust the default elements and values and add new elements and values.</description>
-    <label>PermsetAccessTable</label>
+    <label>UserAccessPermsetAccessTable</label>
 </ApexComponent>
