@@ -1,0 +1,9 @@
+.DS_Store
+/config
+.apex_file_properties
+.apex_script
+.debug
+.describe
+.session
+.settings
+*.sublime-project
