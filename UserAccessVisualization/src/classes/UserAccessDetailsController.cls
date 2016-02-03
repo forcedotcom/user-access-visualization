@@ -274,7 +274,6 @@ public class UserAccessDetailsController {
     public List<NameLabel> getObjectLabels() {
         if (null == xObjectLabels) {
             List<NameLabel> result = new List<NameLabel>();
-            Map<String,SObjectType> describe = Schema.getGlobalDescribe();
 
             // We can't really depend on describe to give us the object we want
             // since that includes a lot of stuff that doesn't support CRUD
@@ -286,8 +285,14 @@ public class UserAccessDetailsController {
             // for now.                   
             for (ObjectPermissions op : [SELECT SObjectType FROM ObjectPermissions 
                                           WHERE Parent.Profile.Name = 'System Administrator']) {
-                result.add(new NameLabel(op.SObjectType, 
-                                         describe.get(op.SObjectType).getDescribe().getLabel()));
+				// Try to get the label, but use the API name if we do not have a describe for the
+				// object. This may occur because this class's version is too low and does not support
+				// the new object.
+				Type sObjectType = Type.forName('Schema.'+op.SObjectType);
+				result.add(
+                	new NameLabel(op.SObjectType, 
+                                 sObjectType==null?op.SObjectType:((SObject)sObjectType.newInstance()).getSObjectType().getDescribe().getLabel())
+                );
             }
             result.sort();
             xObjectLabels = result;
