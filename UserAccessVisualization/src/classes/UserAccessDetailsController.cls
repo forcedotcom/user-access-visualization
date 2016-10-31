@@ -284,11 +284,11 @@ public class UserAccessDetailsController {
             //
             // Note: this is likely not a viable long-term solution, but it works
             // for now.                   
-            for (ObjectPermissions op : [SELECT SObjectType FROM ObjectPermissions 
-                                          WHERE Parent.Profile.Name = 'System Administrator']) {
-                result.add(new NameLabel(op.SObjectType, 
-                                         describe.get(op.SObjectType).getDescribe().getLabel()));
-            }
+for (ObjectPermissions op : [SELECT SObjectType FROM ObjectPermissions WHERE Parent.Profile.Name = 'System Administrator']) {
+    if(op.SObjectType!=null && describe.get(op.SObjectType)!=null){
+    	result.add(new NameLabel(op.SObjectType, describe.get(op.SObjectType).getDescribe().getLabel()));    
+    }  
+}
             result.sort();
             xObjectLabels = result;
         }
