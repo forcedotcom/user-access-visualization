@@ -283,11 +283,17 @@ public class UserAccessDetailsController {
             // the system administrator profile to tell us what those objects are.
             //
             // Note: this is likely not a viable long-term solution, but it works
-            // for now.                   
-            for (ObjectPermissions op : [SELECT SObjectType FROM ObjectPermissions 
-                                          WHERE Parent.Profile.Name = 'System Administrator']) {
-                result.add(new NameLabel(op.SObjectType, 
-                                         describe.get(op.SObjectType).getDescribe().getLabel()));
+            // for now.
+            Set<String> objectNames = new Set<String>();
+            for (ObjectPermissions op : [SELECT SObjectType FROM ObjectPermissions WHERE Parent.Profile.Name = 'System Administrator']) {
+                if(op.SObjectType!=null && describe.get(op.SObjectType)!=null){
+                    String objectName = describe.get(op.SObjectType).getDescribe().getLabel();
+                    if(!objectNames.contains(objectName)) {
+                        objectNames.add(objectName);
+                        System.debug('Adding ' + objectName);
+                        result.add(new NameLabel(op.SObjectType, describe.get(op.SObjectType).getDescribe().getLabel()));
+                    }
+                }  
             }
             result.sort();
             xObjectLabels = result;
@@ -352,8 +358,10 @@ public class UserAccessDetailsController {
                 Map<String,ObjectPermissions> opMap = result.get(op.ParentId);
                 opMap.put(op.SObjectType, op);
                 ObjectPermissions totalOp = totalAccess.get(op.SObjectType);
-                for (String apiName : getObjectPermFieldNames()) {
-                    totalOp.put(apiName, getWithDefault(totalOp, apiName, false) || getWithDefault(op, apiName, false));
+                if(totalOp != null) {
+                    for (String apiName : getObjectPermFieldNames()) {
+                        totalOp.put(apiName, getWithDefault(totalOp, apiName, false) || getWithDefault(op, apiName, false));
+                    }
                 }
             }
             
