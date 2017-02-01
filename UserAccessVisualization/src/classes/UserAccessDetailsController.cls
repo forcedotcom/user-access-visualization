@@ -283,10 +283,16 @@ public class UserAccessDetailsController {
             // the system administrator profile to tell us what those objects are.
             //
             // Note: this is likely not a viable long-term solution, but it works
-            // for now.                   
+            // for now.
+            Set<String> objectNames = new Set<String>();
             for (ObjectPermissions op : [SELECT SObjectType FROM ObjectPermissions WHERE Parent.Profile.Name = 'System Administrator']) {
                 if(op.SObjectType!=null && describe.get(op.SObjectType)!=null){
-                    result.add(new NameLabel(op.SObjectType, describe.get(op.SObjectType).getDescribe().getLabel()));    
+                    String objectName = describe.get(op.SObjectType).getDescribe().getLabel();
+                    if(!objectNames.contains(objectName)) {
+                        objectNames.add(objectName);
+                        System.debug('Adding ' + objectName);
+                        result.add(new NameLabel(op.SObjectType, describe.get(op.SObjectType).getDescribe().getLabel()));
+                    }
                 }  
             }
             result.sort();
